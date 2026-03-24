@@ -9,16 +9,17 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, sta
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import func, or_, select, text
+from sqlalchemy import func, inspect, or_, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.schema import CreateColumn
 
 from .auth.challenge_system import ChallengeError, consume_challenge, get_challenge_for_update, issue_challenge, verify_challenge_signature
 from .auth.token_manager import TokenError, build_activation_token, build_launch_token, decode_activation_token, decode_launch_token, generate_license_key, hash_license_key
 from .config import get_settings
-from .database import Base, engine, get_db
+from .database import Base, database_backend, database_target, engine, get_db
 from .deps import ADMIN_HEADER_NAME, enforce_per_license_rate_limit, get_client_ip, has_admin_access, rate_limit_activate, rate_limit_challenge, rate_limit_heartbeat, rate_limit_security_event, rate_limit_validate, require_admin, require_signed_client_request
-from .models import Activation, License, LicenseStatus, SecurityEvent
+from .models import Activation, ChallengeSession, License, LicenseStatus, SecurityEvent
 from .schemas import ActivateRequest, ActivationResponse, ChallengeRequest, ChallengeResponse, ChallengeVerifyRequest, ChallengeVerifyResponse, DeactivateRequest, DeactivateResponse, GenerateLicenseRequest, GenerateLicenseResponse, HeartbeatRequest, HeartbeatResponse, LicenseDetailsResponse, LicenseListResponse, LicenseSummaryOut, RevokeByIdRequest, RevokeRequest, RevokeResponse, SecurityEventRequest, SecurityEventResponse, ValidateRequest, ValidateResponse
 from .security_tools.abuse_detection import log_security_event, record_activation_failure, record_heartbeat_failure, record_tamper_event, track_ip_change
 from .security_tools.transport_guard import require_https_or_localhost
@@ -112,53 +113,54 @@ async def handle_unexpected_error(request: Request, exc: Exception) -> JSONRespo
 
 
 def _apply_schema_compatibility() -> None:
-    ddls = [
-        "ALTER TABLE activations ADD COLUMN last_heartbeat_at TIMESTAMP",
-        "ALTER TABLE activations ADD COLUMN device_fingerprint VARCHAR(64)",
-        "ALTER TABLE activations ADD COLUMN heartbeat_failures INTEGER DEFAULT 0",
-        "ALTER TABLE activations ADD COLUMN ip_change_count INTEGER DEFAULT 0",
-        "CREATE INDEX IF NOT EXISTS idx_activations_last_heartbeat_at ON activations(last_heartbeat_at)",
-        "ALTER TABLE licenses ADD COLUMN license_key_suffix VARCHAR(4)",
-        "ALTER TABLE licenses ADD COLUMN license_key_plain VARCHAR(32)",
-        "ALTER TABLE licenses ADD COLUMN flagged_reason VARCHAR(255)",
-        "ALTER TABLE licenses ADD COLUMN flagged_at TIMESTAMP",
-        (
-            "CREATE TABLE IF NOT EXISTS challenge_sessions ("
-            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-            "challenge_id VARCHAR(64) NOT NULL UNIQUE,"
-            "license_id INTEGER NOT NULL,"
-            "device_id VARCHAR(128) NOT NULL,"
-            "device_fingerprint VARCHAR(64) NOT NULL,"
-            "nonce VARCHAR(128) NOT NULL,"
-            "ip_address VARCHAR(45) NULL,"
-            "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-            "expires_at TIMESTAMP NOT NULL,"
-            "used_at TIMESTAMP NULL,"
-            "FOREIGN KEY(license_id) REFERENCES licenses(id) ON DELETE CASCADE"
-            ")"
+    compatibility_columns = {
+        Activation.__table__: (
+            "last_heartbeat_at",
+            "device_fingerprint",
+            "heartbeat_failures",
+            "ip_change_count",
         ),
-        "CREATE INDEX IF NOT EXISTS idx_challenge_sessions_challenge_id ON challenge_sessions(challenge_id)",
-        (
-            "CREATE TABLE IF NOT EXISTS security_events ("
-            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-            "event_type VARCHAR(64) NOT NULL,"
-            "severity VARCHAR(16) NOT NULL,"
-            "detail TEXT NOT NULL,"
-            "ip_address VARCHAR(45) NULL,"
-            "license_id INTEGER NULL,"
-            "activation_id INTEGER NULL,"
-            "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-            "FOREIGN KEY(license_id) REFERENCES licenses(id) ON DELETE SET NULL,"
-            "FOREIGN KEY(activation_id) REFERENCES activations(id) ON DELETE SET NULL"
-            ")"
+        License.__table__: (
+            "license_key_suffix",
+            "license_key_plain",
+            "flagged_reason",
+            "flagged_at",
         ),
-    ]
+    }
+    managed_tables = (
+        License.__table__,
+        Activation.__table__,
+        ChallengeSession.__table__,
+        SecurityEvent.__table__,
+    )
+
     with engine.begin() as conn:
-        for ddl in ddls:
-            try:
-                conn.execute(text(ddl))
-            except Exception:
-                pass
+        inspector = inspect(conn)
+        known_tables = set(inspector.get_table_names())
+        identifier_preparer = conn.dialect.identifier_preparer
+
+        for table in managed_tables:
+            if table.name not in known_tables:
+                table.create(bind=conn, checkfirst=True)
+                inspector = inspect(conn)
+                known_tables = set(inspector.get_table_names())
+
+        for table, column_names in compatibility_columns.items():
+            existing_columns = {column["name"] for column in inspector.get_columns(table.name)}
+            for column_name in column_names:
+                if column_name in existing_columns:
+                    continue
+                column = table.c[column_name]
+                compiled_column = str(CreateColumn(column).compile(dialect=conn.dialect))
+                quoted_table = identifier_preparer.quote(table.name)
+                conn.execute(text(f"ALTER TABLE {quoted_table} ADD COLUMN {compiled_column}"))
+                existing_columns.add(column_name)
+
+        for table in managed_tables:
+            for index in table.indexes:
+                index.create(bind=conn, checkfirst=True)
+
+        conn.execute(text("SELECT 1"))
 
 
 @app.on_event("startup")
@@ -166,6 +168,11 @@ def startup() -> None:
     Base.metadata.create_all(bind=engine)
     _apply_schema_compatibility()
     DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    logger.info(
+        "startup_complete database_backend=%s database_target=%s",
+        database_backend,
+        database_target,
+    )
 
 
 def _get_license_by_plain_key(db: Session, plain_key: str) -> License | None:
@@ -219,6 +226,14 @@ def _validate_launch_token_or_raise(launch_token: str, license_id: int, device_i
 
 @app.get("/health")
 def health() -> dict:
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="database unavailable",
+        ) from exc
     return {"status": "ok"}
 
 

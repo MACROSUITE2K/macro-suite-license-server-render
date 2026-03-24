@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .security_tools.secrets_policy import validate_server_secrets
@@ -77,6 +77,16 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def validate_runtime_policies(self) -> "Settings":
+        database_url = str(self.database_url or "").strip()
+        if self.environment == "production":
+            if not database_url:
+                raise ValueError("DATABASE_URL is required in production")
+            if database_url.lower().startswith("sqlite"):
+                raise ValueError("Production requires a Postgres DATABASE_URL")
+        return self
 
 
 def _validate_security_policies(settings: Settings) -> None:

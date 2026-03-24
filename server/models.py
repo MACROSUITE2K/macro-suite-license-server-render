@@ -1,7 +1,7 @@
 ﻿import enum
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -28,8 +28,18 @@ class License(Base):
     license_key_suffix: Mapped[str | None] = mapped_column(String(4), nullable=True)
 
     product: Mapped[str] = mapped_column(String(100), nullable=False)
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default=LicenseStatus.active.value)
-    max_devices: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default=LicenseStatus.active.value,
+        server_default=text("'active'"),
+    )
+    max_devices: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=1,
+        server_default=text("1"),
+    )
     expiration_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
@@ -55,8 +65,18 @@ class Activation(Base):
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
     activated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     last_heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    heartbeat_failures: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    ip_change_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    heartbeat_failures: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default=text("0"),
+    )
+    ip_change_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default=text("0"),
+    )
 
     license: Mapped[License] = relationship("License", back_populates="activations")
 
