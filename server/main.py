@@ -39,6 +39,7 @@ app = FastAPI(
 )
 
 ADMIN_STATIC_DIR = Path(__file__).resolve().parent / "static" / "admin"
+ADMIN_FAVICON_PATH = ADMIN_STATIC_DIR / "favicon.svg"
 DOWNLOADS_DIR = Path(__file__).resolve().parent / "downloads"
 LATEST_DOWNLOAD_METADATA_PATH = DOWNLOADS_DIR / "latest.json"
 app.mount("/admin/static", StaticFiles(directory=ADMIN_STATIC_DIR), name="admin_static")
@@ -240,6 +241,11 @@ def health() -> dict:
 @app.get("/admin", include_in_schema=False)
 def admin_dashboard() -> FileResponse:
     return FileResponse(ADMIN_STATIC_DIR / "index.html")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon() -> FileResponse:
+    return FileResponse(ADMIN_FAVICON_PATH, media_type="image/svg+xml")
 
 
 def _load_latest_download_metadata() -> dict:
