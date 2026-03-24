@@ -1,0 +1,12 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect width="1200" height="700" fill="#f5f7f9" />
+  <rect x="80" y="70" width="1040" height="560" rx="16" fill="#ffffff" stroke="#d6dde5" />
+  <text x="120" y="140" fill="#1f2a37" font-size="34" font-family="Segoe UI">License Generated</text>
+  <rect x="120" y="190" width="960" height="70" rx="10" fill="#ecfdf3" stroke="#abefc6" />
+  <text x="145" y="235" fill="#166534" font-size="24" font-family="Segoe UI">Success: License generated successfully.</text>
+  <rect x="120" y="300" width="960" height="210" rx="12" fill="#0b1220" />
+  <text x="156" y="360" fill="#f4f7fb" font-size="20" font-family="Segoe UI">LICENSE KEY</text>
+  <text x="156" y="440" fill="#f4f7fb" font-size="52" font-family="Consolas, monospace">Q7HD-2MNP-X9RW-TL5K</text>
+  <rect x="120" y="535" width="180" height="56" rx="10" fill="#edf2f7" />
+  <text x="166" y="570" fill="#243240" font-size="22" font-family="Segoe UI">Copy Key</text>
+</svg>

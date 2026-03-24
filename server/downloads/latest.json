@@ -1,0 +1,17 @@
+{
+    "product":  "Macro Suite",
+    "version":  "1.0.5",
+    "distribution_mode":  "zip",
+    "primary_kind":  "zip_package",
+    "file_name":  "MacroSuite_v1.0.5.zip",
+    "latest_file_name":  "MacroSuite_latest.zip",
+    "size_bytes":  99875521,
+    "sha256":  "9e6c716eef5f267b44cca23677b7c2bd3e81b7e629f5566227b7f94de65a4961",
+    "zip_file_name":  "MacroSuite_v1.0.5.zip",
+    "zip_latest_file_name":  "MacroSuite_latest.zip",
+    "zip_size_bytes":  99875521,
+    "zip_sha256":  "9e6c716eef5f267b44cca23677b7c2bd3e81b7e629f5566227b7f94de65a4961",
+    "primary_file_name":  "MacroSuite_v1.0.5.zip",
+    "primary_latest_file_name":  "MacroSuite_latest.zip",
+    "published_at_utc":  "2026-03-23T06:01:04.2034241Z"
+}

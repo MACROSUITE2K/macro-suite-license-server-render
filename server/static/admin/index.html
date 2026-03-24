@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>License Admin Dashboard</title>
+  <link rel="stylesheet" href="/admin/static/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <h1>License Admin</h1>
+      <p class="sub">Simple web control panel</p>
+      <nav>
+        <button class="tab-btn active" data-tab="generate">Generate License</button>
+        <button class="tab-btn" data-tab="manage">License Management</button>
+        <button class="tab-btn" data-tab="activations">Activations</button>
+        <button class="tab-btn" data-tab="license-list">Active Licenses</button>
+        <button class="tab-btn" data-tab="downloads">Downloads</button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2>Dashboard</h2>
+          <p>Manage licenses with forms and buttons.</p>
+        </div>
+
+        <div class="token-box">
+          <label for="adminTokenInput">Admin Token</label>
+          <div class="token-row">
+            <input id="adminTokenInput" type="password" placeholder="Enter X-Admin-Token" autocomplete="off" />
+            <button id="btnSetToken" class="primary">Unlock</button>
+          </div>
+          <small>Token is kept in-memory for this tab session only.</small>
+        </div>
+      </header>
+
+      <section id="message" class="message hidden"></section>
+
+      <section id="tab-generate" class="tab-panel active">
+        <div class="card">
+          <h3>Generate License</h3>
+          <div class="form-grid">
+            <label>
+              <span>License Duration</span>
+              <select id="durationSelect">
+                <option value="1">1 Day</option>
+                <option value="7">7 Days</option>
+                <option value="30">30 Days</option>
+                <option value="90">90 Days</option>
+                <option value="180">180 Days</option>
+                <option value="365">365 Days</option>
+                <option value="custom">Custom</option>
+              </select>
+            </label>
+
+            <label id="customDaysWrap" class="hidden">
+              <span>Custom Days</span>
+              <input id="customDaysInput" type="number" min="1" max="3650" value="30" />
+            </label>
+
+            <label>
+              <span>Max Devices</span>
+              <select id="maxDevicesSelect">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+              </select>
+            </label>
+
+            <label class="wide">
+              <span>Product Name</span>
+              <input id="productInput" type="text" placeholder="My Desktop App" />
+            </label>
+          </div>
+
+          <div class="action-row">
+            <button id="btnGenerate" class="primary">Generate License</button>
+          </div>
+
+          <div class="output-wrap">
+            <p class="output-label">LICENSE KEY</p>
+            <div id="licenseOutput" class="license-output">----</div>
+            <button id="btnCopyKey" class="ghost" disabled>Copy Key</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-manage" class="tab-panel">
+        <div class="card">
+          <h3>License Management</h3>
+
+          <div class="lookup-row">
+            <input id="lookupKeyInput" type="text" placeholder="XXXX-XXXX-XXXX-XXXX" />
+            <button id="btnLookup" class="primary">Lookup</button>
+          </div>
+
+          <div class="detail-grid">
+            <div>
+              <p class="label">Status</p>
+              <p id="detailStatus" class="value">-</p>
+            </div>
+            <div>
+              <p class="label">Expiration Date</p>
+              <p id="detailExpiration" class="value">-</p>
+            </div>
+            <div>
+              <p class="label">Max Devices</p>
+              <p id="detailMaxDevices" class="value">-</p>
+            </div>
+            <div>
+              <p class="label">Activated Devices</p>
+              <p id="detailActivationCount" class="value">-</p>
+            </div>
+          </div>
+
+          <div class="manage-actions">
+            <button id="btnRevoke" class="danger" disabled>Revoke License</button>
+            <div class="inline-deactivate">
+              <select id="deviceSelect" disabled>
+                <option value="">Select device</option>
+              </select>
+              <button id="btnDeactivateSelected" class="ghost" disabled>Deactivate Device</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-activations" class="tab-panel">
+        <div class="card">
+          <h3>Activations</h3>
+
+          <div class="lookup-row">
+            <input id="activationsKeyInput" type="text" placeholder="XXXX-XXXX-XXXX-XXXX" />
+            <button id="btnLoadActivations" class="primary">Load Activations</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Device Name</th>
+                  <th>Device ID</th>
+                  <th>Activation Date</th>
+                  <th>IP Address</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="activationsTableBody">
+                <tr>
+                  <td colspan="5" class="empty">No activations loaded.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-license-list" class="tab-panel">
+        <div class="card">
+          <h3>Active Licenses</h3>
+
+          <div class="toolbar-row">
+            <label>
+              <span>Status Filter</span>
+              <select id="licenseListStatus">
+                <option value="active" selected>Active</option>
+                <option value="all">All</option>
+                <option value="revoked">Revoked</option>
+                <option value="suspended">Suspended</option>
+              </select>
+            </label>
+
+            <label class="inline-check">
+              <input id="includeExpiredToggle" type="checkbox" />
+              <span>Include expired</span>
+            </label>
+
+            <button id="btnLoadLicenseList" class="primary">Load List</button>
+          </div>
+
+          <p id="licenseListMeta" class="table-meta">No data loaded. New licenses show full key; older legacy licenses stay masked.</p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>License Key</th>
+                  <th>Product</th>
+                  <th>Status</th>
+                  <th>Devices</th>
+                  <th>Expiration</th>
+                  <th>Created</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="licenseListTableBody">
+                <tr>
+                  <td colspan="7" class="empty">No licenses loaded.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-downloads" class="tab-panel">
+        <div class="card">
+          <h3>Public Downloader</h3>
+          <p class="table-meta">Share either a direct installer URL or a one-line PowerShell installer command.</p>
+
+          <div class="form-grid">
+            <label class="wide">
+              <span>Published Version</span>
+              <input id="downloadVersion" type="text" value="Not published" readonly />
+            </label>
+
+            <label class="wide">
+              <span>Direct Installer URL</span>
+              <div class="copy-row">
+                <input id="downloadDirectUrl" type="text" value="Not published" readonly />
+                <button id="btnCopyDirectUrl" class="ghost" type="button">Copy URL</button>
+              </div>
+            </label>
+
+            <label class="wide">
+              <span>PowerShell One-Liner (Download + Launch)</span>
+              <div class="copy-row">
+                <input id="downloadCommand" type="text" value="Not published" readonly />
+                <button id="btnCopyDownloadCommand" class="ghost" type="button">Copy Command</button>
+              </div>
+            </label>
+          </div>
+
+          <div class="action-row">
+            <button id="btnRefreshDownloads" class="primary" type="button">Refresh Download Info</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/admin/static/app.js"></script>
+</body>
+</html>

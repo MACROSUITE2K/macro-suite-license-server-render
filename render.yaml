@@ -1,0 +1,87 @@
+services:
+  - type: web
+    name: macro-suite-license-server
+    runtime: python
+    plan: free
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: APP_NAME
+        value: License Server
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        value: sqlite:///./license.db
+      - key: SECURE_STARTUP_ENFORCED
+        value: "true"
+      - key: REQUIRE_HTTPS
+        value: "true"
+      - key: ALLOW_HTTP_LOCALHOST
+        value: "false"
+      - key: PROXY_PROTO_HEADER
+        value: x-forwarded-proto
+      - key: REQUIRE_CLIENT_SIGNATURES
+        value: "true"
+      - key: ACTIVATION_TOKEN_TTL_MINUTES
+        value: "30"
+      - key: LAUNCH_TOKEN_TTL_SECONDS
+        value: "300"
+      - key: ACTIVATION_TOKEN_ISSUER
+        value: license-server
+      - key: CHALLENGE_TTL_SECONDS
+        value: "120"
+      - key: CHALLENGE_TIMESTAMP_TTL_SECONDS
+        value: "90"
+      - key: HEARTBEAT_INTERVAL_SECONDS
+        value: "15"
+      - key: CLIENT_SIGNATURE_TTL_SECONDS
+        value: "120"
+      - key: RATE_LIMIT_WINDOW_SECONDS
+        value: "60"
+      - key: RATE_LIMIT_ACTIVATE_PER_WINDOW
+        value: "20"
+      - key: RATE_LIMIT_VALIDATE_PER_WINDOW
+        value: "120"
+      - key: RATE_LIMIT_HEARTBEAT_PER_WINDOW
+        value: "120"
+      - key: RATE_LIMIT_CHALLENGE_PER_WINDOW
+        value: "40"
+      - key: RATE_LIMIT_SECURITY_EVENT_PER_WINDOW
+        value: "30"
+      - key: PER_LICENSE_RATE_LIMIT_WINDOW_SECONDS
+        value: "60"
+      - key: PER_LICENSE_ACTIVATE_PER_WINDOW
+        value: "8"
+      - key: PER_LICENSE_VALIDATE_PER_WINDOW
+        value: "40"
+      - key: AUTO_REVOKE_ON_ABUSE
+        value: "true"
+      - key: MAX_ACTIVATION_FAILURES_PER_HOUR
+        value: "10"
+      - key: MAX_HEARTBEAT_FAILURES_PER_ACTIVATION
+        value: "6"
+      - key: MAX_IP_CHANGES_PER_ACTIVATION_PER_DAY
+        value: "4"
+      - key: MAX_TAMPER_EVENTS_PER_DAY
+        value: "1"
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: LICENSE_KEY_SECRET
+        generateValue: true
+      - key: ACTIVATION_TOKEN_SECRET
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SERVER_SECRET
+        generateValue: true
+      - key: API_SECRET
+        generateValue: true
+      - key: HMAC_KEY
+        generateValue: true
+      - key: LICENSE_SIGNING_KEY
+        generateValue: true
+      - key: CLIENT_SHARED_SECRET
+        generateValue: true

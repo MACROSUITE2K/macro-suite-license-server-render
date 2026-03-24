@@ -1,0 +1,23 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect width="1200" height="700" fill="#f5f7f9" />
+  <rect x="60" y="60" width="1080" height="580" rx="16" fill="#ffffff" stroke="#d6dde5" />
+  <text x="100" y="125" fill="#1f2a37" font-size="34" font-family="Segoe UI">Activations</text>
+  <rect x="100" y="160" width="700" height="56" rx="10" fill="#ffffff" stroke="#d6dde5" />
+  <text x="118" y="196" fill="#5f6e7e" font-size="20" font-family="Consolas, monospace">ABCD-EFGH-IJKL-MNOP</text>
+  <rect x="820" y="160" width="220" height="56" rx="10" fill="#0f766e" />
+  <text x="868" y="196" fill="#ffffff" font-size="22" font-family="Segoe UI">Load</text>
+  <rect x="100" y="240" width="1040" height="320" rx="12" fill="#ffffff" stroke="#d6dde5" />
+  <rect x="100" y="240" width="1040" height="56" rx="12" fill="#f7f9fb" />
+  <text x="120" y="275" fill="#425466" font-size="16" font-family="Segoe UI">Device Name</text>
+  <text x="350" y="275" fill="#425466" font-size="16" font-family="Segoe UI">Device ID</text>
+  <text x="620" y="275" fill="#425466" font-size="16" font-family="Segoe UI">Activation Date</text>
+  <text x="830" y="275" fill="#425466" font-size="16" font-family="Segoe UI">IP Address</text>
+  <text x="1000" y="275" fill="#425466" font-size="16" font-family="Segoe UI">Action</text>
+  <line x1="100" y1="315" x2="1140" y2="315" stroke="#d6dde5" />
+  <text x="120" y="350" fill="#1f2a37" font-size="16" font-family="Segoe UI">Jay-PC</text>
+  <text x="350" y="350" fill="#1f2a37" font-size="15" font-family="Consolas, monospace">a8fc3f923d7d83...</text>
+  <text x="620" y="350" fill="#1f2a37" font-size="16" font-family="Segoe UI">3/5/2026, 9:12 PM</text>
+  <text x="830" y="350" fill="#1f2a37" font-size="16" font-family="Segoe UI">192.168.1.24</text>
+  <rect x="985" y="324" width="130" height="34" rx="8" fill="#fef3f2" stroke="#fecdca" />
+  <text x="1010" y="347" fill="#991b1b" font-size="14" font-family="Segoe UI">Deactivate</text>
+</svg>

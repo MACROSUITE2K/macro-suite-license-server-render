@@ -1,0 +1,10 @@
+﻿fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+sqlalchemy>=2.0.0
+pydantic-settings>=2.4.0
+PyJWT>=2.9.0
+requests>=2.32.0
+cryptography>=44.0.0
+psutil>=6.0.0
+pywin32>=308; platform_system == "Windows"
+psycopg[binary]>=3.2.0

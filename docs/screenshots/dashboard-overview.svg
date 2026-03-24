@@ -1,0 +1,25 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect width="1200" height="700" fill="#f5f7f9" />
+  <rect x="0" y="0" width="250" height="700" fill="#0f1720" />
+  <text x="28" y="52" fill="#ecf0f4" font-size="28" font-family="Segoe UI">License Admin</text>
+  <rect x="24" y="112" width="202" height="48" rx="8" fill="#1c344c" />
+  <text x="40" y="142" fill="#eaf1f8" font-size="18" font-family="Segoe UI">Generate License</text>
+  <rect x="24" y="172" width="202" height="48" rx="8" fill="#101c29" stroke="#355779" />
+  <text x="40" y="202" fill="#eaf1f8" font-size="18" font-family="Segoe UI">Management</text>
+  <rect x="280" y="30" width="890" height="90" rx="12" fill="#ffffff" stroke="#d6dde5" />
+  <text x="305" y="70" fill="#1f2a37" font-size="28" font-family="Segoe UI">Dashboard</text>
+  <text x="305" y="96" fill="#5f6e7e" font-size="16" font-family="Segoe UI">Admin token and navigation</text>
+  <rect x="280" y="140" width="890" height="520" rx="14" fill="#ffffff" stroke="#d6dde5" />
+  <text x="310" y="185" fill="#1f2a37" font-size="24" font-family="Segoe UI">Generate License Panel</text>
+  <rect x="310" y="212" width="260" height="60" rx="10" fill="#f7f9fb" stroke="#d6dde5" />
+  <text x="326" y="248" fill="#425466" font-size="16" font-family="Segoe UI">Duration Dropdown</text>
+  <rect x="585" y="212" width="190" height="60" rx="10" fill="#f7f9fb" stroke="#d6dde5" />
+  <text x="601" y="248" fill="#425466" font-size="16" font-family="Segoe UI">Max Devices</text>
+  <rect x="310" y="286" width="465" height="60" rx="10" fill="#f7f9fb" stroke="#d6dde5" />
+  <text x="326" y="322" fill="#425466" font-size="16" font-family="Segoe UI">Product Name</text>
+  <rect x="310" y="366" width="220" height="52" rx="10" fill="#0f766e" />
+  <text x="344" y="398" fill="#ffffff" font-size="18" font-family="Segoe UI">Generate</text>
+  <rect x="310" y="442" width="700" height="120" rx="12" fill="#0b1220" />
+  <text x="336" y="488" fill="#f4f7fb" font-size="18" font-family="Segoe UI">LICENSE KEY</text>
+  <text x="336" y="535" fill="#f4f7fb" font-size="36" font-family="Consolas, monospace">ABCD-EFGH-IJKL-MNOP</text>
+</svg>
