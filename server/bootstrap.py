@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import base64
+import json
 import logging
+import zlib
 from datetime import date, datetime, timezone
 
 import requests
@@ -43,11 +46,30 @@ def _reset_postgres_sequence(conn, table_name: str) -> None:
     )
 
 
+def _load_snapshot_payload(snapshot_b64: str | None) -> tuple[list[tuple[dict, dict]], list[dict]]:
+    encoded = str(snapshot_b64 or "").strip()
+    if not encoded:
+        return [], []
+
+    raw = zlib.decompress(base64.b64decode(encoded)).decode("utf-8")
+    payload = json.loads(raw)
+
+    details = []
+    for item in payload.get("licenses", []):
+        plain_key = str(item.get("license_key", "")).strip().upper()
+        detail = dict(item.get("detail") or {})
+        if plain_key and detail:
+            details.append(({"license_key": plain_key}, detail))
+    security_events = list(payload.get("security_events", []))
+    return details, security_events
+
+
 def bootstrap_legacy_admin_data_if_needed(
     *,
     engine: Engine,
     admin_token: str,
     source_url: str | None,
+    snapshot_b64: str | None = None,
     timeout_seconds: int = 30,
 ) -> None:
     if engine.dialect.name != "postgresql":
@@ -63,51 +85,55 @@ def bootstrap_legacy_admin_data_if_needed(
         logger.info("legacy_bootstrap_skip reason=target_not_empty license_count=%s", existing_licenses)
         return
 
-    headers = {"X-Admin-Token": admin_token}
-    try:
-        list_response = requests.get(
-            f"{normalized_source}/licenses",
-            headers=headers,
-            params={"status": "all", "include_expired": "true"},
-            timeout=timeout_seconds,
-        )
-        list_response.raise_for_status()
-        items = list_response.json().get("items", [])
-    except Exception as exc:
-        raise RuntimeError(f"legacy bootstrap failed to fetch licenses from {normalized_source}") from exc
+    details, security_events = _load_snapshot_payload(snapshot_b64)
+    source_label = "snapshot"
 
-    if not items:
-        logger.info("legacy_bootstrap_skip reason=source_empty source=%s", normalized_source)
-        return
-
-    details: list[tuple[dict, dict]] = []
-    for item in items:
-        key = str(item.get("license_key", "")).strip().upper()
-        if not key:
-            continue
+    if not details and normalized_source:
+        headers = {"X-Admin-Token": admin_token}
         try:
-            detail_response = requests.get(
-                f"{normalized_source}/license/{key}",
+            list_response = requests.get(
+                f"{normalized_source}/licenses",
                 headers=headers,
+                params={"status": "all", "include_expired": "true"},
                 timeout=timeout_seconds,
             )
-            detail_response.raise_for_status()
-            details.append((item, detail_response.json()))
+            list_response.raise_for_status()
+            items = list_response.json().get("items", [])
         except Exception as exc:
-            raise RuntimeError(f"legacy bootstrap failed to fetch details for {key}") from exc
+            raise RuntimeError(f"legacy bootstrap failed to fetch licenses from {normalized_source}") from exc
 
-    security_events: list[dict] = []
-    try:
-        security_response = requests.get(
-            f"{normalized_source}/security/events",
-            headers=headers,
-            params={"limit": 200},
-            timeout=timeout_seconds,
-        )
-        security_response.raise_for_status()
-        security_events = list(security_response.json().get("items", []))
-    except Exception:
-        logger.warning("legacy_bootstrap_security_events_unavailable source=%s", normalized_source)
+        if items:
+            source_label = normalized_source
+            for item in items:
+                key = str(item.get("license_key", "")).strip().upper()
+                if not key:
+                    continue
+                try:
+                    detail_response = requests.get(
+                        f"{normalized_source}/license/{key}",
+                        headers=headers,
+                        timeout=timeout_seconds,
+                    )
+                    detail_response.raise_for_status()
+                    details.append((item, detail_response.json()))
+                except Exception as exc:
+                    raise RuntimeError(f"legacy bootstrap failed to fetch details for {key}") from exc
+
+            try:
+                security_response = requests.get(
+                    f"{normalized_source}/security/events",
+                    headers=headers,
+                    params={"limit": 200},
+                    timeout=timeout_seconds,
+                )
+                security_response.raise_for_status()
+                security_events = list(security_response.json().get("items", []))
+            except Exception:
+                logger.warning("legacy_bootstrap_security_events_unavailable source=%s", normalized_source)
+
+    if not details:
+        logger.info("legacy_bootstrap_skip reason=source_empty source=%s", normalized_source or "snapshot")
+        return
 
     with engine.begin() as conn:
         conn.execute(text("TRUNCATE TABLE challenge_sessions, security_events, activations, licenses RESTART IDENTITY CASCADE"))
@@ -173,7 +199,7 @@ def bootstrap_legacy_admin_data_if_needed(
 
     logger.info(
         "legacy_bootstrap_complete source=%s licenses=%s activations=%s security_events=%s",
-        normalized_source,
+        source_label,
         len(details),
         activation_count,
         len(security_events),

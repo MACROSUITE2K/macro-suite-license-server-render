@@ -173,6 +173,7 @@ def startup() -> None:
         engine=engine,
         admin_token=settings.admin_token,
         source_url=settings.legacy_bootstrap_url,
+        snapshot_b64=settings.legacy_bootstrap_snapshot_b64,
         timeout_seconds=settings.legacy_bootstrap_timeout_seconds,
     )
     DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
