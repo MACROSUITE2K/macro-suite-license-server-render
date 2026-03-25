@@ -70,6 +70,7 @@ def bootstrap_legacy_admin_data_if_needed(
     admin_token: str,
     source_url: str | None,
     snapshot_b64: str | None = None,
+    force_replace: bool = False,
     timeout_seconds: int = 30,
 ) -> None:
     if engine.dialect.name != "postgresql":
@@ -81,7 +82,7 @@ def bootstrap_legacy_admin_data_if_needed(
 
     with Session(engine) as db:
         existing_licenses = int(db.scalar(select(func.count(License.id))) or 0)
-    if existing_licenses > 0:
+    if existing_licenses > 0 and not force_replace:
         logger.info("legacy_bootstrap_skip reason=target_not_empty license_count=%s", existing_licenses)
         return
 

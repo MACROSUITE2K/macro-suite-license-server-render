@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     legacy_bootstrap_url: str | None = None
     legacy_bootstrap_timeout_seconds: int = Field(default=30, ge=5, le=120)
     legacy_bootstrap_snapshot_b64: str | None = None
+    legacy_bootstrap_force_replace: bool = False
 
     # Core server controls.
     secure_startup_enforced: bool = True
