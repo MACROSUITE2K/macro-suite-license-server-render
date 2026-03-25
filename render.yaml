@@ -1,7 +1,6 @@
 databases:
   - name: macro-suite-license-prod-db
-    plan: basic-256mb
-    diskSizeGB: 15
+    plan: free
 
 services:
   - type: web
@@ -22,6 +21,10 @@ services:
         fromDatabase:
           name: macro-suite-license-prod-db
           property: connectionString
+      - key: LEGACY_BOOTSTRAP_URL
+        value: https://macro-suite-license-prod.onrender.com
+      - key: LEGACY_BOOTSTRAP_TIMEOUT_SECONDS
+        value: "30"
       - key: SECURE_STARTUP_ENFORCED
         value: "true"
       - key: REQUIRE_HTTPS

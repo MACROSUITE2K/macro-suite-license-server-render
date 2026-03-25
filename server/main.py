@@ -16,6 +16,7 @@ from sqlalchemy.schema import CreateColumn
 
 from .auth.challenge_system import ChallengeError, consume_challenge, get_challenge_for_update, issue_challenge, verify_challenge_signature
 from .auth.token_manager import TokenError, build_activation_token, build_launch_token, decode_activation_token, decode_launch_token, generate_license_key, hash_license_key
+from .bootstrap import bootstrap_legacy_admin_data_if_needed
 from .config import get_settings
 from .database import Base, database_backend, database_target, engine, get_db
 from .deps import ADMIN_HEADER_NAME, enforce_per_license_rate_limit, get_client_ip, has_admin_access, rate_limit_activate, rate_limit_challenge, rate_limit_heartbeat, rate_limit_security_event, rate_limit_validate, require_admin, require_signed_client_request
@@ -168,6 +169,12 @@ def _apply_schema_compatibility() -> None:
 def startup() -> None:
     Base.metadata.create_all(bind=engine)
     _apply_schema_compatibility()
+    bootstrap_legacy_admin_data_if_needed(
+        engine=engine,
+        admin_token=settings.admin_token,
+        source_url=settings.legacy_bootstrap_url,
+        timeout_seconds=settings.legacy_bootstrap_timeout_seconds,
+    )
     DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
     logger.info(
         "startup_complete database_backend=%s database_target=%s",

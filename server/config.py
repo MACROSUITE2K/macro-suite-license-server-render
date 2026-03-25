@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     app_name: str = "License Server"
     environment: Literal["development", "production"] = "production"
     database_url: str = Field(default="sqlite:///./license.db")
+    legacy_bootstrap_url: str | None = None
+    legacy_bootstrap_timeout_seconds: int = Field(default=30, ge=5, le=120)
 
     # Core server controls.
     secure_startup_enforced: bool = True
